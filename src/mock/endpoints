@@ -1,0 +1,79 @@
+
+const express = require ('express')
+const morgan = require('morgan')
+ const favicon =require('serve-favicon')
+let pokemons = require('./src/db/mock-pokemon.js')
+const { success, getUniqueId } = require('./helper.js')
+const bodyParser = require('body-parser') 
+const app = express()
+const port = 3000
+
+/************Outil de Suivi des connections à l'application************************* */
+
+const logger =(req, res, next) =>{
+    console.log(`URL : ${req.url}`)
+    next()
+}
+/****************************************** */
+
+
+app.use(logger)
+    .use(morgan('dev'))
+    .use(favicon(__dirname+ '/favicon.ico'))
+    .use (bodyParser.json())
+
+app.get('/', (req,res,next) => res.send(' Hello Express!! '))
+
+ app.get('/api/pokemons/:id', (req,res,next) => { 
+    
+    const id = parseInt(req.params.id)
+    const pokemon = pokemons.find(pokemon => pokemon.id === id)
+    
+    
+    
+    res.send(`Le nom de ce pokemon est  : ${pokemon.name} `) 
+    //res.send(`L'image de ce pokemon est  : ${pokemon.picture}`) 
+                                    }
+        ) 
+
+app.get('/api/pokemon/:id', (req,res,next) => { 
+    
+            const id = parseInt(req.params.id)
+            const pokemon = pokemons.find(pokemon => pokemon.id === id)
+            const message ='Un pokemon a bien été trouvé'
+            
+            res.json(success(message,pokemon))
+            //res.send(`L'image de ce pokemon est  : ${pokemon.picture}`) 
+                                            }
+                ) 
+
+             
+app.get('/api/pokemons' , (req,res) => {
+    const nbPokemon =pokemons.length
+    const message =`La liste des pokemons a bien été récupéré, il y a en ce moment ${nbPokemon} pokemon(s) `
+      //  res.send(`il y a en ce monent ${nbPokemon} pokemon(s)`) 
+    res.json(success(message,pokemons))
+    }) 
+
+
+ app.post('/api/pokemons', (req,res)=>{
+    //const id= pokemons.length +1
+    const id= getUniqueId(pokemons)
+    const pokemonCreated = {...req.body, ...{id : id, created: new Date()}}
+    pokemons.push(pokemonCreated)
+    const message = ` un nouveau pokemon :  ${pokemonCreated.name}  a été ajouté `
+    res.json(success(message,pokemons))
+
+}) 
+
+//****mise à jour avec PUT *******
+app.put('/api/pokemons/:id', (req,res) =>{
+    const id =parseInt(req.params.id)
+    const pokemonUpdated = {...req.body, ...{id : id}}
+    pokemons = pokemons.map(pokemon => {
+            return  pokemon.id === id ? pokemonUpdated : pokemon
+                })
+    const message = ` le  pokemon :  ${pokemonUpdated}  a été mis a jour `
+    res.json(success(message,pokemons))
+
+}) 
